@@ -3,7 +3,10 @@ name: Update README with Changelog
 on:
   push:
     branches:
-      - main   # ou troque pela branch principal do seu projeto
+      - main   # troque se sua branch principal tiver outro nome
+
+permissions:
+  contents: write   # 🔑 Dá permissão de push para o bot
 
 jobs:
   update-readme:
@@ -23,19 +26,23 @@ jobs:
             git log -1 --pretty=%B
             echo "EOF"
           } >> "$GITHUB_OUTPUT"
+
       - name: Update README with changelog
         run: |
           COMMIT_MESSAGE="${{ steps.last_commit.outputs.message }}"
           
+          # Garante que o arquivo existe
+          touch README.md
+
           # Se não existir "## Changelog", cria
           if ! grep -q "## Changelog" README.md; then
             echo -e "\n## Changelog\n" >> README.md
           fi
           
-          # Adiciona a nova entrada com data e hora
+          # Adiciona nova linha logo após "## Changelog"
           sed -i "s|## Changelog|## Changelog\n- $(date '+%Y-%m-%d %H:%M') - $COMMIT_MESSAGE|" README.md
 
-      - name: Commit changes
+      - name: Commit and push changes
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
